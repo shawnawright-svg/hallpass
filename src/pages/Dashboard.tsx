@@ -15,7 +15,7 @@ const C = {
   bg: '#f8fafc', white: '#fff', ink: '#0f172a', slate: '#475569',
   muted: '#94a3b8', cloud: '#f1f5f9', border: '#e2e8f0',
   green: '#10b981', greenBg: 'rgba(16,185,129,0.08)', greenBorder: 'rgba(16,185,129,0.2)',
-  red: '#ef4444', redBg: 'rgba(239,68,68,0.06)', redBorder: 'rgba(239,68,68,0.2)',
+  red: '#ef4444', redBg: 'rgba(239,68,68,0.08)', redBorder: 'rgba(239,68,68,0.3)',
   amber: '#f59e0b', primary: '#667eea',
 }
 
@@ -97,7 +97,10 @@ function SchedulePicker({ day, start, periodName, onChange, roster }: {
           {/* Period */}
           <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 8 }}>Period</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 14 }}>
-            {SCHEDULES[pickDay][pickStart].map(p => {
+            {SCHEDULES[pickDay][pickStart].filter(p => {
+              const num = p.name.match(/\d+/)?.[0] ?? ''
+              return roster[`${pickDay}_${num}`]?.name?.trim()
+            }).map(p => {
               const pNum = p.name.match(/\d+/)?.[0] ?? ''
               const pDay = pickDay === 'red' ? 'Red' : 'Black'
               const periodLabel = `${pDay} ${pNum}`
@@ -179,7 +182,10 @@ export default function Dashboard() {
     localStorage.setItem('db_period', periodName)
   }, [day, start, periodName])
 
-  const periods = SCHEDULES[day][start]
+  const periods = SCHEDULES[day][start].filter(p => {
+    const num = p.name.match(/\d+/)?.[0] ?? ''
+    return firebaseRoster[`${day}_${num}`]?.name?.trim()
+  })
   const period = periods.find(p => p.name === periodName) ?? periods[0]
 
   // Get student list from Firebase roster — fall back to schedules.ts only if Firebase
@@ -329,7 +335,7 @@ export default function Dashboard() {
             {period ? (
               <>
                 <span style={{ fontSize: 15, fontWeight: 700, color: C.ink, lineHeight: 1.3 }}>
-                  {rosterPeriod?.name || period.name.replace(/^[^-]+-/, '')}
+                  {rosterPeriod?.name || 'Unnamed Class'}
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: isPeriodActive ? C.green : C.muted, display: 'inline-block', flexShrink: 0 }} />
